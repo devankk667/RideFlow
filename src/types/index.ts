@@ -54,6 +54,9 @@ export interface Vehicle {
   insuranceExpiry: string;
   insuranceNumber: string;
   isActive: boolean;
+  registrationNumber?: string;
+  registrationExpiry?: string;
+  lastServiceDate?: string;
 }
 
 // Ride types

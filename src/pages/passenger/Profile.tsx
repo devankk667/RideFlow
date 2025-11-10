@@ -31,7 +31,7 @@ const Profile: React.FC = () => {
   const [name, setName] = useState(passenger?.name || '');
   const [email, setEmail] = useState(passenger?.email || '');
   const [phone, setPhone] = useState(passenger?.phone || '');
-  const [address, setAddress] = useState(passenger?.address || '');
+  const [address, setAddress] = useState('');
   
   // Settings
   const [notifications, setNotifications] = useState(true);
@@ -48,7 +48,6 @@ const Profile: React.FC = () => {
       name,
       email,
       phone,
-      address,
     });
 
     toast.success('Profile Updated', 'Your profile has been updated successfully');
@@ -59,7 +58,7 @@ const Profile: React.FC = () => {
     setName(passenger?.name || '');
     setEmail(passenger?.email || '');
     setPhone(passenger?.phone || '');
-    setAddress(passenger?.address || '');
+    setAddress('');
     setIsEditing(false);
   };
 

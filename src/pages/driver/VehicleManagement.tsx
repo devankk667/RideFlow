@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Vehicle } from '../../types';
 import {
   Car,
   Plus,
@@ -70,7 +71,7 @@ const VehicleManagement: React.FC = () => {
       return;
     }
 
-    const newVehicle = {
+    const newVehicle: Vehicle = {
       id: `vehicle_${Date.now()}`,
       driverId: driver?.id || '',
       type: vehicleType,
@@ -79,11 +80,15 @@ const VehicleManagement: React.FC = () => {
       year: parseInt(year),
       color,
       plateNumber,
-      registrationNumber,
-      registrationExpiry: new Date(
+      capacity: vehicleType === 'bike' ? 1 : vehicleType === 'auto' ? 3 : 4,
+      features: ['AC', 'Music System'],
+      insuranceExpiry: new Date(
         new Date().setFullYear(new Date().getFullYear() + 1)
       ).toISOString(),
-      insuranceExpiry: new Date(
+      insuranceNumber: `INS-${Date.now()}`,
+      isActive: true,
+      registrationNumber,
+      registrationExpiry: new Date(
         new Date().setFullYear(new Date().getFullYear() + 1)
       ).toISOString(),
       lastServiceDate: new Date().toISOString(),

@@ -61,7 +61,7 @@ const RideHistory: React.FC = () => {
     })
     .sort((a, b) => {
       if (sortBy === 'date') {
-        return new Date(b.requestTime).getTime() - new Date(a.requestTime).getTime();
+        return new Date(b.requestTime || b.createdAt).getTime() - new Date(a.requestTime || a.createdAt).getTime();
       } else {
         return b.fare - a.fare;
       }
@@ -276,7 +276,7 @@ const RideHistory: React.FC = () => {
                               </span>
                             </div>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {formatDate(ride.requestTime)}
+                              {formatDate(ride.requestTime || ride.createdAt)}
                             </p>
                           </div>
                           <div className="text-right">
@@ -386,7 +386,7 @@ const RideHistory: React.FC = () => {
                                   <Star
                                     key={i}
                                     className={`h-4 w-4 ${
-                                      i < ride.rating!
+                                      ride.rating && i < ride.rating.stars
                                         ? 'text-yellow-400 fill-yellow-400'
                                         : 'text-gray-300 dark:text-gray-600'
                                     }`}

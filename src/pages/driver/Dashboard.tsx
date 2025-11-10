@@ -39,7 +39,7 @@ const DriverDashboard: React.FC = () => {
 
   const [isOnline, setIsOnline] = useState(true);
   const [incomingRides, setIncomingRides] = useState(
-    mockRides.filter((r) => r.status === 'requested').slice(0, 3)
+    mockRides.filter((r) => r.status === 'pending').slice(0, 3)
   );
 
   // Get driver stats
@@ -52,7 +52,7 @@ const DriverDashboard: React.FC = () => {
 
   const todayEarnings = completedRides
     .filter((r) => {
-      const rideDate = new Date(r.requestTime);
+      const rideDate = new Date(r.requestTime || r.createdAt);
       const today = new Date();
       return rideDate.toDateString() === today.toDateString();
     })
@@ -60,7 +60,7 @@ const DriverDashboard: React.FC = () => {
 
   const thisWeekEarnings = completedRides
     .filter((r) => {
-      const rideDate = new Date(r.requestTime);
+      const rideDate = new Date(r.requestTime || r.createdAt);
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       return rideDate >= weekAgo;
@@ -106,7 +106,7 @@ const DriverDashboard: React.FC = () => {
     const interval = setInterval(() => {
       if (incomingRides.length < 3 && Math.random() > 0.7) {
         const newRide = mockRides.find(
-          (r) => r.status === 'requested' && !incomingRides.find((ir) => ir.id === r.id)
+          (r) => r.status === 'pending' && !incomingRides.find((ir) => ir.id === r.id)
         );
         if (newRide) {
           setIncomingRides([...incomingRides, newRide]);
@@ -429,7 +429,7 @@ const DriverDashboard: React.FC = () => {
                   </span>
                   <span className="font-semibold text-gray-900 dark:text-white">
                     {completedRides.filter((r) => {
-                      const rideDate = new Date(r.requestTime);
+                      const rideDate = new Date(r.requestTime || r.createdAt);
                       return rideDate.toDateString() === new Date().toDateString();
                     }).length}
                   </span>

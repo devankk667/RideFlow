@@ -36,7 +36,7 @@ const Earnings: React.FC = () => {
   const getFilteredRides = () => {
     const now = new Date();
     return driverRides.filter((r) => {
-      const rideDate = new Date(r.requestTime);
+      const rideDate = new Date(r.requestTime || r.createdAt);
       switch (timeFilter) {
         case 'today':
           return rideDate.toDateString() === now.toDateString();
@@ -62,14 +62,19 @@ const Earnings: React.FC = () => {
 
   // Calculate tips and bonuses
   const totalTips = filteredRides.length * 25; // Simulated tips
-  const surgeBonuses = filteredRides.filter((r) => new Date(r.requestTime).getHours() >= 17 && new Date(r.requestTime).getHours() <= 20).length * 50;
+  const surgeBonuses = filteredRides.filter((r) => {
+    const rideTime = r.requestTime || r.createdAt;
+    if (!rideTime) return false;
+    const hours = new Date(rideTime).getHours();
+    return hours >= 17 && hours <= 20;
+  }).length * 50;
 
   // Daily breakdown for chart simulation
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - i));
     const dayRides = driverRides.filter((r) => {
-      const rideDate = new Date(r.requestTime);
+      const rideDate = new Date(r.requestTime || r.createdAt);
       return rideDate.toDateString() === date.toDateString();
     });
     const dayEarnings = dayRides.reduce((sum, r) => sum + r.fare, 0);

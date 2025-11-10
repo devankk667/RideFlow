@@ -1,8 +1,8 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/utils/helpers';
 
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface CardProps extends Omit<HTMLMotionProps<'div'>, 'onAnimationStart'> {
   variant?: 'default' | 'glass' | 'gradient';
   hover?: boolean;
 }
@@ -27,10 +27,10 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <Component
         ref={ref}
         className={cn('rounded-xl shadow-lg p-6', variants[variant], className)}
-        {...motionProps}
-        {...props}
+        {...(motionProps as any)}
+        {...(props as any)}
       >
-        {children}
+        {children as React.ReactNode}
       </Component>
     );
   }

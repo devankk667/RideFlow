@@ -114,7 +114,7 @@ export const passengers: Passenger[] = [
     paymentMethods: [
       {
         id: generateId('pm_'),
-        type: 'card',
+        type: 'card' as const,
         isDefault: true,
         cardNumber: '**** 1234',
         cardholderName: 'Demo Passenger',
@@ -129,7 +129,7 @@ export const passengers: Passenger[] = [
       id: generateId('pass_'),
       email: generateEmail(name),
       password: 'password123',
-    role: 'passenger',
+      role: 'passenger' as const,
     name,
     phone: generatePhone(),
     avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
@@ -146,7 +146,7 @@ export const passengers: Passenger[] = [
     paymentMethods: [
       {
         id: generateId('pm_'),
-        type: 'card',
+        type: 'card' as const,
         isDefault: true,
         cardNumber: `**** ${getRandomNumber(1000, 9999)}`,
         cardholderName: name,
@@ -186,7 +186,7 @@ export const drivers: Driver[] = [
       id: generateId('drv_'),
       email: generateEmail(name),
       password: 'password123',
-    role: 'driver',
+      role: 'driver' as const,
     name,
     phone: generatePhone(),
     avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=driver${name}`,
@@ -456,9 +456,9 @@ export const incidentReports: IncidentReport[] = Array.from({ length: 8 }, (_, i
     rideId: ride.id,
     reportedBy: ride.passengerId,
     reportedAgainst: ride.driverId,
-    type: getRandomElement(types),
-    severity: getRandomElement(severities),
-    status: getRandomElement(statuses),
+    type: getRandomElement([...types]),
+    severity: getRandomElement([...severities]),
+    status: getRandomElement([...statuses]),
     description: getRandomElement([
       'Minor scratch on vehicle door',
       'Driver was speeding',
@@ -484,7 +484,7 @@ export const trafficReports: TrafficReport[] = Array.from({ length: 15 }, () => 
   return {
     id: generateId('trf_'),
     route: `${loc1.area} to ${loc2.area}`,
-    congestionLevel: getRandomElement(congestionLevels),
+    congestionLevel: getRandomElement([...congestionLevels]),
     averageSpeed: getRandomNumber(15, 60),
     estimatedDelay: getRandomNumber(0, 30),
     reportedAt: new Date(Date.now() - getRandomNumber(0, 120) * 60 * 1000).toISOString(),

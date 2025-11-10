@@ -45,7 +45,7 @@ const PaymentMethods: React.FC = () => {
         id: `pm_${Date.now()}`,
         type: 'card',
         cardNumber: cardNumber.replace(/\s/g, ''),
-        cardHolderName: cardName,
+        cardholderName: cardName,
         expiryDate,
         isDefault: paymentMethods.length === 0,
       };

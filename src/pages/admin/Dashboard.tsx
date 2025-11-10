@@ -494,7 +494,7 @@ const AdminDashboard: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          <span>{formatDate(ride.requestTime)}</span>
+                          <span>{formatDate(ride.requestTime || ride.createdAt)}</span>
                         </div>
                       </div>
                     </motion.div>
