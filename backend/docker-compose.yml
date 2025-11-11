@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: rideshare_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - rideshare_network
+
+  # You can add a service for React here if you are running a development environment
+  # frontend:
+  #   build:
+  #     context: .
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - rideshare_network
+  #   depends_on:
+  #     - db
+
+networks:
+  rideshare_network:
+    driver: bridge
+
+volumes:
+  mysql-data:
