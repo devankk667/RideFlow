@@ -171,5 +171,27 @@ BEGIN
   END IF;
 END$$
 
+
+CREATE TRIGGER trg_update_driver_status_after_ride
+AFTER UPDATE ON RIDES FOR EACH ROW
+BEGIN
+  IF NEW.Status = 'Completed' THEN
+    UPDATE DRIVERS SET Is_Active = TRUE WHERE Driver_ID = NEW.Driver_ID;
+  END IF;
+END$$
+
+CREATE TRIGGER trg_payment_update
+AFTER UPDATE ON PAYMENTS FOR EACH ROW
+BEGIN
+  IF NEW.Status = 'Successful' THEN
+  UPDATE RIDES SET Status = 'Completed' WHERE Ride_ID = NEW.Ride_ID;
+  END IF;
+END$$
+
 DELIMITER ;
+
+
+
+
+
 
