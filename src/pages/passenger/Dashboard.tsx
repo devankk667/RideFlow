@@ -18,7 +18,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useAuthStore, usePassenger } from '../../stores/authStore';
 import { useRideStore } from '../../stores/rideStore';
-import { formatCurrency, formatDateTime } from '../../utils/helpers';
+import { formatCurrency, formatDateTime, formatDistance } from '../../utils/helpers';
 
 const PassengerDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -47,13 +47,13 @@ const PassengerDashboard: React.FC = () => {
     },
     {
       label: 'Wallet Balance',
-      value: formatCurrency(passenger.walletBalance),
+      value: formatCurrency(passenger.walletBalance || 0),
       icon: <CreditCard className="h-6 w-6" />,
       color: 'from-green-500 to-emerald-500',
     },
     {
       label: 'Your Rating',
-      value: `${passenger.rating.toFixed(1)} ★`,
+      value: `${(passenger.rating || 0).toFixed(1)} ★`,
       icon: <TrendingUp className="h-6 w-6" />,
       color: 'from-yellow-500 to-orange-500',
     },
@@ -87,9 +87,8 @@ const PassengerDashboard: React.FC = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 glass-strong border-r border-white/20 z-50 transform transition-transform duration-300 ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        className={`fixed top-0 left-0 h-full w-64 glass-strong border-r border-white/20 z-50 transform transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          }`}
       >
         <div className="p-6">
           <div className="flex items-center justify-between mb-8">
@@ -123,7 +122,7 @@ const PassengerDashboard: React.FC = () => {
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-400">Rating</span>
               <span className="font-semibold text-yellow-600">
-                {passenger.rating.toFixed(1)} ★
+                {(passenger.rating || 0).toFixed(1)} ★
               </span>
             </div>
           </div>
@@ -138,11 +137,10 @@ const PassengerDashboard: React.FC = () => {
                   setIsSidebarOpen(false);
                 }}
                 whileHover={{ x: 4 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  item.path === '/passenger/dashboard'
-                    ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${item.path === '/passenger/dashboard'
+                  ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
               >
                 {item.icon}
                 <span>{item.label}</span>
@@ -181,7 +179,7 @@ const PassengerDashboard: React.FC = () => {
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Welcome back, {passenger.name.split(' ')[0]}!
+                  Welcome back, {passenger.name?.split(' ')[0] || 'Passenger'}!
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {formatDateTime(new Date())}
@@ -263,7 +261,7 @@ const PassengerDashboard: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="font-bold text-lg text-gray-900 dark:text-white">
-                        Wallet: {formatCurrency(passenger.walletBalance)}
+                        Wallet: {formatCurrency(passenger.walletBalance || 0)}
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Add money or view transactions
@@ -329,8 +327,8 @@ const PassengerDashboard: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-white mb-1">
-                          {ride.pickup.address.split(',')[0]} →{' '}
-                          {ride.destination.address.split(',')[0]}
+                          {ride.pickup?.address?.split(',')[0] || 'Unknown'} →{' '}
+                          {ride.destination?.address?.split(',')[0] || 'Unknown'}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           {formatDateTime(ride.createdAt)}
@@ -341,7 +339,7 @@ const PassengerDashboard: React.FC = () => {
                           {formatCurrency(ride.fare)}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {ride.distance.toFixed(1)} km
+                          {formatDistance(ride.distance)}
                         </p>
                       </div>
                     </div>

@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, User, Phone, Car, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, Phone, Car, Eye, EyeOff, FileText } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
+import { useAuthStore } from '../../stores/authStore';
+import { useToast } from '../../stores/toastStore';
 
 const SignupPage: React.FC = () => {
   const navigate = useNavigate();
+  const { register } = useAuthStore();
+  const toast = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<'passenger' | 'driver'>('passenger');
   const [formData, setFormData] = useState({
@@ -16,12 +20,44 @@ const SignupPage: React.FC = () => {
     phone: '',
     password: '',
     confirmPassword: '',
+    licenseNo: '',
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would create the account
-    navigate('/login');
+
+    const newErrors: Record<string, string> = {};
+    if (!formData.name) newErrors.name = 'Full Name is required';
+    if (!formData.email) newErrors.email = 'Email is required';
+    if (!formData.phone) newErrors.phone = 'Phone Number is required';
+    if (!formData.password) newErrors.password = 'Password is required';
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    if (role === 'driver' && !formData.licenseNo) newErrors.licenseNo = 'License Number is required';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    const userData = {
+      fullName: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      password: formData.password,
+      userType: role,
+      ...(role === 'driver' && { licenseNo: formData.licenseNo }),
+    };
+
+    const success = await register(userData);
+
+    if (success) {
+      toast.success('Account created!', 'Welcome to RideFlow');
+      if (role === 'passenger') navigate('/passenger/dashboard');
+      else navigate('/driver/dashboard');
+    } else {
+      toast.error('Registration Failed', 'Please try again');
+    }
   };
 
   return (
@@ -48,21 +84,19 @@ const SignupPage: React.FC = () => {
           <div className="flex gap-2 mb-6">
             <button
               onClick={() => setRole('passenger')}
-              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                role === 'passenger'
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${role === 'passenger'
                   ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-lg'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-              }`}
+                }`}
             >
               Passenger
             </button>
             <button
               onClick={() => setRole('driver')}
-              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
-                role === 'driver'
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${role === 'driver'
                   ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-lg'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-              }`}
+                }`}
             >
               Driver
             </button>
@@ -74,7 +108,11 @@ const SignupPage: React.FC = () => {
               type="text"
               placeholder="John Doe"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+                setErrors({ ...errors, name: '' });
+              }}
+              error={errors.name}
               leftIcon={<User className="h-5 w-5" />}
             />
 
@@ -83,7 +121,11 @@ const SignupPage: React.FC = () => {
               type="email"
               placeholder="you@example.com"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, email: e.target.value });
+                setErrors({ ...errors, email: '' });
+              }}
+              error={errors.email}
               leftIcon={<Mail className="h-5 w-5" />}
             />
 
@@ -92,16 +134,39 @@ const SignupPage: React.FC = () => {
               type="tel"
               placeholder="+91 98765 43210"
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, phone: e.target.value });
+                setErrors({ ...errors, phone: '' });
+              }}
+              error={errors.phone}
               leftIcon={<Phone className="h-5 w-5" />}
             />
+
+            {role === 'driver' && (
+              <Input
+                label="License Number"
+                type="text"
+                placeholder="DL-1234567890123"
+                value={formData.licenseNo}
+                onChange={(e) => {
+                  setFormData({ ...formData, licenseNo: e.target.value });
+                  setErrors({ ...errors, licenseNo: '' });
+                }}
+                error={errors.licenseNo}
+                leftIcon={<FileText className="h-5 w-5" />}
+              />
+            )}
 
             <Input
               label="Password"
               type={showPassword ? 'text' : 'password'}
               placeholder="••••••••"
               value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, password: e.target.value });
+                setErrors({ ...errors, password: '' });
+              }}
+              error={errors.password}
               leftIcon={<Lock className="h-5 w-5" />}
               rightIcon={
                 <button
@@ -119,7 +184,11 @@ const SignupPage: React.FC = () => {
               type={showPassword ? 'text' : 'password'}
               placeholder="••••••••"
               value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, confirmPassword: e.target.value });
+                setErrors({ ...errors, confirmPassword: '' });
+              }}
+              error={errors.confirmPassword}
               leftIcon={<Lock className="h-5 w-5" />}
             />
 

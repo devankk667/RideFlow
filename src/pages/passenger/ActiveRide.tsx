@@ -20,15 +20,111 @@ import { Button } from '../../components/ui/Button';
 import { useAuthStore, usePassenger } from '../../stores/authStore';
 import { useRideStore } from '../../stores/rideStore';
 import { useToast } from '../../stores/toastStore';
-import { formatCurrency, formatDistance, getVehicleIcon } from '../../utils/helpers';
+import { formatCurrency, formatDistance, getVehicleIcon, simulateLocationUpdate } from '../../utils/helpers';
 import { drivers, vehiclesData } from '../../data/mockData';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix Leaflet icon issue
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+const MapComponent: React.FC<{
+  pickup: { lat: number; lng: number; address: string };
+  destination: { lat: number; lng: number; address: string };
+  status: string;
+  progress: number;
+}> = ({ pickup, destination, status, progress }) => {
+  // Default to New Delhi if coordinates are missing (0,0)
+  const defaultCenter = { lat: 28.6139, lng: 77.2090 };
+
+  const start = (pickup.lat === 0 && pickup.lng === 0)
+    ? { lat: defaultCenter.lat - 0.02, lng: defaultCenter.lng - 0.02 }
+    : pickup;
+
+  const end = (destination.lat === 0 && destination.lng === 0)
+    ? { lat: defaultCenter.lat + 0.02, lng: defaultCenter.lng + 0.02 }
+    : destination;
+
+  const driverPos = simulateLocationUpdate(start, end, progress / 100);
+
+  // Custom Icons
+  const carIcon = new L.DivIcon({
+    className: 'custom-icon',
+    html: `<div style="background-color: #2563eb; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); font-size: 16px;">🚗</div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+  });
+
+  const pickupIcon = new L.DivIcon({
+    className: 'custom-icon',
+    html: `<div style="background-color: #16a34a; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">📍</div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
+  });
+
+  const destIcon = new L.DivIcon({
+    className: 'custom-icon',
+    html: `<div style="background-color: #dc2626; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">🏁</div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
+  });
+
+  function ChangeView({ center }: { center: { lat: number, lng: number } }) {
+    const map = useMap();
+    map.setView(center);
+    return null;
+  }
+
+  return (
+    <MapContainer
+      center={[driverPos.lat, driverPos.lng]}
+      zoom={13}
+      style={{ height: '100%', width: '100%' }}
+      zoomControl={false}
+    >
+      <ChangeView center={driverPos} />
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+
+      <Marker position={[start.lat, start.lng]} icon={pickupIcon}>
+        <Popup>Pickup: {pickup.address}</Popup>
+      </Marker>
+
+      <Marker position={[end.lat, end.lng]} icon={destIcon}>
+        <Popup>Destination: {destination.address}</Popup>
+      </Marker>
+
+      <Marker position={[driverPos.lat, driverPos.lng]} icon={carIcon} zIndexOffset={1000}>
+        <Popup>Your Ride</Popup>
+      </Marker>
+
+      <Polyline
+        positions={[[start.lat, start.lng], [end.lat, end.lng]]}
+        pathOptions={{ color: '#2563eb', weight: 4, opacity: 0.7, dashArray: '10, 10' }}
+      />
+    </MapContainer>
+  );
+};
 
 const ActiveRide: React.FC = () => {
   const navigate = useNavigate();
   const passenger = usePassenger();
   const toast = useToast();
   const { rides, currentRide, updateRide, setCurrentRide } = useRideStore();
-  
+
   const [showSOSModal, setShowSOSModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [rideProgress, setRideProgress] = useState(0);
@@ -39,10 +135,10 @@ const ActiveRide: React.FC = () => {
   const activeRide = currentRide && currentRide.passengerId === passenger?.id
     ? currentRide
     : rides.find(
-        (r) =>
-          r.passengerId === passenger?.id &&
-          (r.status === 'accepted' || r.status === 'driver_arriving' || r.status === 'in_progress' || r.status === 'pending')
-      );
+      (r) =>
+        r.passengerId === passenger?.id &&
+        (r.status === 'accepted' || r.status === 'driver_arriving' || r.status === 'in_progress' || r.status === 'pending')
+    );
 
   const driver = activeRide ? drivers.find((d) => d.id === activeRide.driverId) : null;
   const vehicle = activeRide ? vehiclesData.find((v) => v.id === activeRide.vehicleId) : null;
@@ -58,7 +154,6 @@ const ActiveRide: React.FC = () => {
       setRideProgress((prev) => {
         if (prev >= 100) {
           clearInterval(progressInterval);
-          completeRide();
           return 100;
         }
         return prev + 0.5; // 0.5% every second = ~3.3 minutes for full ride
@@ -86,6 +181,13 @@ const ActiveRide: React.FC = () => {
       clearInterval(etaInterval);
     };
   }, [activeRide?.id]);
+
+  // Handle ride completion when progress hits 100%
+  useEffect(() => {
+    if (rideProgress >= 100) {
+      completeRide();
+    }
+  }, [rideProgress]);
 
   const completeRide = () => {
     if (activeRide) {
@@ -166,7 +268,7 @@ const ActiveRide: React.FC = () => {
     { label: 'Completed', completed: activeRide.status === 'completed' },
   ];
 
-  const displayFare = activeRide.status === 'in_progress' 
+  const displayFare = activeRide.status === 'in_progress'
     ? Math.min(activeRide.fare, activeRide.fare * 0.5 + currentFare)
     : activeRide.fare;
 
@@ -182,8 +284,8 @@ const ActiveRide: React.FC = () => {
                 {activeRide.status === 'accepted'
                   ? 'Driver is on the way'
                   : activeRide.status === 'driver_arriving'
-                  ? 'Driver arriving soon'
-                  : 'Ride in progress'}
+                    ? 'Driver arriving soon'
+                    : 'Ride in progress'}
               </p>
             </div>
             <Button variant="danger" size="sm" onClick={() => setShowSOSModal(true)}>
@@ -199,73 +301,14 @@ const ActiveRide: React.FC = () => {
           {/* Main Content - Map and Progress */}
           <div className="lg:col-span-2 space-y-6">
             {/* Map Simulation */}
-            <Card variant="glass">
-              <div className="relative h-96 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg overflow-hidden">
-                {/* Simulated map with route */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-6xl mb-4 animate-pulse">🗺️</div>
-                    <p className="text-gray-600 dark:text-gray-400">Live Map Simulation</p>
-                  </div>
-                </div>
-
-                {/* Pickup marker */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute top-8 left-8 bg-green-500 text-white p-3 rounded-full shadow-lg"
-                >
-                  <MapPin className="h-6 w-6" />
-                </motion.div>
-
-                {/* Destination marker */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="absolute bottom-8 right-8 bg-red-500 text-white p-3 rounded-full shadow-lg"
-                >
-                  <MapPin className="h-6 w-6" />
-                </motion.div>
-
-                {/* Driver location (animated) */}
-                <motion.div
-                  animate={{
-                    top: ['8%', '45%', '92%'],
-                    left: ['8%', '45%', '92%'],
-                  }}
-                  transition={{
-                    duration: activeRide.duration * 60,
-                    ease: 'linear',
-                    repeat: Infinity,
-                    repeatType: 'reverse' as const,
-                  }}
-                  className="absolute bg-primary-600 text-white p-4 rounded-full shadow-xl z-10"
-                >
-                  <CarIcon className="h-6 w-6" />
-                </motion.div>
-
-                {/* ETA Badge */}
-                <div className="absolute top-4 right-4 glass px-4 py-2 rounded-full">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-primary-600" />
-                    <span className="font-semibold">
-                      ETA: {Math.max(0, Math.ceil(etaMinutes))} min
-                    </span>
-                  </div>
-                </div>
-
-                {/* Fare Meter (only during ride) */}
-                {activeRide.status === 'in_progress' && (
-                  <div className="absolute bottom-4 left-4 glass px-6 py-3 rounded-lg">
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Current Fare</p>
-                      <p className="text-2xl font-bold text-primary-600">
-                        {formatCurrency(displayFare)}
-                      </p>
-                    </div>
-                  </div>
-                )}
+            <Card variant="glass" className="overflow-hidden p-0">
+              <div className="h-96 w-full relative z-0">
+                <MapComponent
+                  pickup={activeRide.pickup}
+                  destination={activeRide.destination}
+                  status={activeRide.status}
+                  progress={rideProgress}
+                />
               </div>
             </Card>
 
@@ -292,11 +335,10 @@ const ActiveRide: React.FC = () => {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ delay: index * 0.1 }}
-                        className={`h-8 w-8 rounded-full flex items-center justify-center mb-2 ${
-                          stage.completed
-                            ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white'
-                            : 'bg-gray-200 dark:bg-gray-700 text-gray-400'
-                        }`}
+                        className={`h-8 w-8 rounded-full flex items-center justify-center mb-2 ${stage.completed
+                          ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-400'
+                          }`}
                       >
                         {stage.completed ? (
                           <CheckCircle className="h-5 w-5" />
@@ -305,11 +347,10 @@ const ActiveRide: React.FC = () => {
                         )}
                       </motion.div>
                       <p
-                        className={`text-xs text-center ${
-                          stage.completed
-                            ? 'text-gray-900 dark:text-white font-semibold'
-                            : 'text-gray-500 dark:text-gray-400'
-                        }`}
+                        className={`text-xs text-center ${stage.completed
+                          ? 'text-gray-900 dark:text-white font-semibold'
+                          : 'text-gray-500 dark:text-gray-400'
+                          }`}
                       >
                         {stage.label}
                       </p>

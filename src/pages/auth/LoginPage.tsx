@@ -25,9 +25,9 @@ const LoginPage: React.FC = () => {
     { role: 'admin', email: 'admin@rideflow.com', password: 'admin123' },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const newErrors: Record<string, string> = {};
     if (!formData.email) newErrors.email = 'Email is required';
     if (!formData.password) newErrors.password = 'Password is required';
@@ -37,12 +37,12 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    const success = login(formData.email, formData.password);
+    const success = await login(formData.email, formData.password);
 
     if (success) {
       toast.success('Welcome back!', 'Logged in successfully');
       const user = useAuthStore.getState().user;
-      
+
       // Redirect based on role
       if (user?.role === 'passenger') {
         navigate('/passenger/dashboard');
@@ -59,8 +59,8 @@ const LoginPage: React.FC = () => {
 
   const handleDemoLogin = (account: typeof demoAccounts[0]) => {
     setFormData({ email: account.email, password: account.password });
-    setTimeout(() => {
-      const success = login(account.email, account.password);
+    setTimeout(async () => {
+      const success = await login(account.email, account.password);
       if (success) {
         toast.success(`Welcome ${account.role}!`, 'Logged in with demo account');
         const user = useAuthStore.getState().user;

@@ -5,12 +5,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number | string): string {
+  const val = Number(amount) || 0;
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
+    minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(val);
 }
 
 export function formatDate(date: string | Date): string {
@@ -38,19 +40,21 @@ export function formatDateTime(date: string | Date): string {
   }).format(new Date(date));
 }
 
-export function formatDistance(km: number): string {
-  if (km < 1) {
-    return `${Math.round(km * 1000)} m`;
+export function formatDistance(km: number | string): string {
+  const val = Number(km) || 0;
+  if (val < 1) {
+    return `${Math.round(val * 1000)} m`;
   }
-  return `${km.toFixed(1)} km`;
+  return `${val.toFixed(1)} km`;
 }
 
-export function formatDuration(minutes: number): string {
-  if (minutes < 60) {
-    return `${Math.round(minutes)} min`;
+export function formatDuration(minutes: number | string): string {
+  const val = Number(minutes) || 0;
+  if (val < 60) {
+    return `${Math.round(val)} min`;
   }
-  const hours = Math.floor(minutes / 60);
-  const mins = Math.round(minutes % 60);
+  const hours = Math.floor(val / 60);
+  const mins = Math.round(val % 60);
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
 }
 

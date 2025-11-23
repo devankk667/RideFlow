@@ -52,8 +52,8 @@ const RideHistory: React.FC = () => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         return (
-          ride.pickup.address.toLowerCase().includes(query) ||
-          ride.destination.address.toLowerCase().includes(query) ||
+          (ride.pickup?.address?.toLowerCase() || '').includes(query) ||
+          (ride.destination?.address?.toLowerCase() || '').includes(query) ||
           ride.id.toLowerCase().includes(query)
         );
       }
@@ -266,7 +266,7 @@ const RideHistory: React.FC = () => {
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <span className="text-sm font-mono text-gray-500">
-                                #{ride.id.slice(-8)}
+                                #{String(ride.id)}
                               </span>
                               <span
                                 className={`px-2 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${statusColor}`}
@@ -300,7 +300,7 @@ const RideHistory: React.FC = () => {
                                 Pickup
                               </p>
                               <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {ride.pickup.address}
+                                {ride.pickup?.address || 'Unknown Location'}
                               </p>
                             </div>
                           </div>
@@ -316,7 +316,7 @@ const RideHistory: React.FC = () => {
                                 Destination
                               </p>
                               <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {ride.destination.address}
+                                {ride.destination?.address || 'Unknown Location'}
                               </p>
                             </div>
                           </div>
@@ -358,7 +358,7 @@ const RideHistory: React.FC = () => {
                               <div className="flex items-center gap-1">
                                 <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
                                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                                  {driver.rating.toFixed(1)}
+                                  {driver.rating ? driver.rating.toFixed(1) : '0.0'}
                                 </span>
                               </div>
                             </div>
@@ -385,11 +385,10 @@ const RideHistory: React.FC = () => {
                                 {[...Array(5)].map((_, i) => (
                                   <Star
                                     key={i}
-                                    className={`h-4 w-4 ${
-                                      ride.rating && i < ride.rating.stars
-                                        ? 'text-yellow-400 fill-yellow-400'
-                                        : 'text-gray-300 dark:text-gray-600'
-                                    }`}
+                                    className={`h-4 w-4 ${ride.rating && i < ride.rating.stars
+                                      ? 'text-yellow-400 fill-yellow-400'
+                                      : 'text-gray-300 dark:text-gray-600'
+                                      }`}
                                   />
                                 ))}
                               </div>
@@ -443,7 +442,7 @@ const RideHistory: React.FC = () => {
                       <div>
                         <p className="font-bold text-gray-900 dark:text-white">{driver.name}</p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {selectedRide.pickup.address} → {selectedRide.destination.address}
+                          {selectedRide.pickup?.address || 'Unknown'} → {selectedRide.destination?.address || 'Unknown'}
                         </p>
                       </div>
                     </div>
@@ -463,11 +462,10 @@ const RideHistory: React.FC = () => {
                         className="transition-transform hover:scale-110"
                       >
                         <Star
-                          className={`h-10 w-10 ${
-                            star <= rating
-                              ? 'text-yellow-400 fill-yellow-400'
-                              : 'text-gray-300 dark:text-gray-600'
-                          }`}
+                          className={`h-10 w-10 ${star <= rating
+                            ? 'text-yellow-400 fill-yellow-400'
+                            : 'text-gray-300 dark:text-gray-600'
+                            }`}
                         />
                       </button>
                     ))}
@@ -498,11 +496,10 @@ const RideHistory: React.FC = () => {
                         <button
                           key={tag}
                           onClick={() => toggleTag(tag)}
-                          className={`px-3 py-1.5 rounded-full text-sm transition-all ${
-                            ratingTags.includes(tag)
-                              ? 'bg-primary-500 text-white'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                          }`}
+                          className={`px-3 py-1.5 rounded-full text-sm transition-all ${ratingTags.includes(tag)
+                            ? 'bg-primary-500 text-white'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                            }`}
                         >
                           {tag}
                         </button>

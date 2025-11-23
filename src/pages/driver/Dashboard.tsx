@@ -78,7 +78,7 @@ const DriverDashboard: React.FC = () => {
 
     setIncomingRides(incomingRides.filter((r) => r.id !== rideId));
     toast.success('Ride Accepted!', 'Navigate to pickup location');
-    
+
     // Simulate navigation to active ride after 1 second
     setTimeout(() => {
       navigate('/driver/active-ride');
@@ -140,11 +140,10 @@ const DriverDashboard: React.FC = () => {
             </div>
             <div className="flex items-center gap-3">
               <div
-                className={`px-4 py-2 rounded-full font-semibold text-sm ${
-                  isOnline
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                }`}
+                className={`px-4 py-2 rounded-full font-semibold text-sm ${isOnline
+                  ? 'bg-green-500 text-white'
+                  : 'bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  }`}
               >
                 {isOnline ? '🟢 Online' : '⚫ Offline'}
               </div>
@@ -209,7 +208,7 @@ const DriverDashboard: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Rating</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {driver.rating.toFixed(1)}
+                  {driver.rating ? driver.rating.toFixed(1) : '0.0'}
                 </p>
               </div>
             </div>
@@ -246,11 +245,10 @@ const DriverDashboard: React.FC = () => {
                   Incoming Requests
                 </h3>
                 <span
-                  className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                    incomingRides.length > 0
-                      ? 'bg-green-500/10 text-green-600'
-                      : 'bg-gray-500/10 text-gray-600'
-                  }`}
+                  className={`px-3 py-1 rounded-full text-sm font-semibold ${incomingRides.length > 0
+                    ? 'bg-green-500/10 text-green-600'
+                    : 'bg-gray-500/10 text-gray-600'
+                    }`}
                 >
                   {incomingRides.length} pending
                 </span>
@@ -301,7 +299,7 @@ const DriverDashboard: React.FC = () => {
                                   </p>
                                   <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                                     <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                                    <span>{passenger.rating.toFixed(1)}</span>
+                                    <span>{passenger.rating ? passenger.rating.toFixed(1) : '0.0'}</span>
                                     <span>•</span>
                                     <span>{passenger.totalRides} rides</span>
                                   </div>
@@ -328,7 +326,7 @@ const DriverDashboard: React.FC = () => {
                                     Pickup
                                   </p>
                                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    {ride.pickup.address}
+                                    {ride.pickup?.address || 'Unknown Location'}
                                   </p>
                                 </div>
                                 <span className="text-xs text-gray-500">2.3 km away</span>
@@ -345,7 +343,7 @@ const DriverDashboard: React.FC = () => {
                                     Destination
                                   </p>
                                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    {ride.destination.address}
+                                    {ride.destination?.address || 'Unknown Location'}
                                   </p>
                                 </div>
                               </div>
@@ -463,20 +461,20 @@ const DriverDashboard: React.FC = () => {
               </div>
               <div className="text-center py-4">
                 <p className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                  {formatCurrency(driver.totalEarnings)}
+                  {formatCurrency(driver.totalEarnings || 0)}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Total Earnings</p>
               </div>
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-2 gap-4 text-center">
                 <div>
                   <p className="text-lg font-bold text-green-600">
-                    {formatCurrency(driver.totalEarnings * 0.85)}
+                    {formatCurrency((driver.totalEarnings || 0) * 0.85)}
                   </p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">Paid Out</p>
                 </div>
                 <div>
                   <p className="text-lg font-bold text-primary-600">
-                    {formatCurrency(driver.totalEarnings * 0.15)}
+                    {formatCurrency((driver.totalEarnings || 0) * 0.15)}
                   </p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">Pending</p>
                 </div>

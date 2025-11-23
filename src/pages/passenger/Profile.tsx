@@ -32,7 +32,7 @@ const Profile: React.FC = () => {
   const [email, setEmail] = useState(passenger?.email || '');
   const [phone, setPhone] = useState(passenger?.phone || '');
   const [address, setAddress] = useState('');
-  
+
   // Settings
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
@@ -133,13 +133,13 @@ const Profile: React.FC = () => {
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Total Rides</span>
                   <span className="font-semibold text-gray-900 dark:text-white">
-                    {passenger.totalRides}
+                    {passenger.totalRides || 0}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Rating</span>
                   <span className="font-semibold text-gray-900 dark:text-white">
-                    ⭐ {passenger.rating.toFixed(1)}
+                    ⭐ {(passenger.rating || 0).toFixed(1)}
                   </span>
                 </div>
                 <div className="flex justify-between">

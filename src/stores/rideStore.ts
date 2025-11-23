@@ -1,28 +1,29 @@
 import { create } from 'zustand';
-import type { Ride, Location, VehicleType } from '../types';
-import { rides as mockRides } from '../data/mockData';
+import type { Ride } from '../types';
+import { API_URL } from '../config/api';
+import { useAuthStore } from './authStore';
 
 interface RideState {
   rides: Ride[];
   currentRide: Ride | null;
   bookingData: {
-    pickup?: Location;
-    destination?: Location;
-    vehicleType?: VehicleType;
+    pickup?: any;
+    destination?: any;
+    vehicleType?: string;
     scheduledTime?: string;
   };
-  
+
   setBookingData: (data: Partial<RideState['bookingData']>) => void;
-  createRide: (ride: Omit<Ride, 'id' | 'status' | 'createdAt'>) => Ride;
-  updateRide: (rideId: string, data: Partial<Ride>) => void;
+  createRide: (ride: any) => Promise<Ride | undefined>;
+  updateRide: (rideId: string, data: Partial<Ride>) => Promise<void>;
   setCurrentRide: (ride: Ride | null) => void;
   getRideById: (rideId: string) => Ride | undefined;
-  getUserRides: (userId: string) => Ride[];
+  getUserRides: (userId: string) => Promise<Ride[]>;
   getDriverRides: (driverId: string) => Ride[];
 }
 
 export const useRideStore = create<RideState>((set, get) => ({
-  rides: [...mockRides],
+  rides: [],
   currentRide: null,
   bookingData: {},
 
@@ -32,32 +33,56 @@ export const useRideStore = create<RideState>((set, get) => ({
     }));
   },
 
-  createRide: (rideData) => {
-    const newRide: Ride = {
-      ...rideData,
-      id: `ride_${Date.now()}${Math.random().toString(36).substr(2, 9)}`,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    };
+  createRide: async (rideData) => {
+    try {
+      const token = useAuthStore.getState().token;
+      const response = await fetch(`${API_URL}/rides`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(rideData),
+      });
 
-    set((state) => ({
-      rides: [newRide, ...state.rides],
-      currentRide: newRide,
-    }));
+      const newRide = await response.json();
 
-    return newRide;
+      if (response.ok) {
+        set((state) => ({
+          rides: [newRide, ...state.rides],
+          currentRide: newRide,
+        }));
+        return newRide;
+      }
+    } catch (error) {
+      console.error('Create ride error:', error);
+    }
   },
 
-  updateRide: (rideId, data) => {
-    set((state) => ({
-      rides: state.rides.map((ride) =>
-        ride.id === rideId ? { ...ride, ...data } : ride
-      ),
-      currentRide:
-        state.currentRide?.id === rideId
-          ? { ...state.currentRide, ...data }
-          : state.currentRide,
-    }));
+  updateRide: async (rideId, data) => {
+    try {
+      const token = useAuthStore.getState().token;
+      await fetch(`${API_URL}/rides/${rideId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data),
+      });
+
+      set((state) => ({
+        rides: state.rides.map((ride) =>
+          ride.id === rideId ? { ...ride, ...data } : ride
+        ),
+        currentRide:
+          state.currentRide?.id === rideId
+            ? { ...state.currentRide, ...data }
+            : state.currentRide,
+      }));
+    } catch (error) {
+      console.error('Update ride error:', error);
+    }
   },
 
   setCurrentRide: (ride) => {
@@ -68,8 +93,22 @@ export const useRideStore = create<RideState>((set, get) => ({
     return get().rides.find((ride) => ride.id === rideId);
   },
 
-  getUserRides: (userId) => {
-    return get().rides.filter((ride) => ride.passengerId === userId);
+  getUserRides: async (userId) => {
+    try {
+      const token = useAuthStore.getState().token;
+      const response = await fetch(`${API_URL}/passengers/rides`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const rides = await response.json();
+      if (response.ok) {
+        set({ rides });
+        return rides;
+      }
+      return [];
+    } catch (error) {
+      console.error('Get user rides error:', error);
+      return [];
+    }
   },
 
   getDriverRides: (driverId) => {

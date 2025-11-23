@@ -116,9 +116,9 @@ const BookRide: React.FC = () => {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((loc1.lat * Math.PI) / 180) *
-        Math.cos((loc2.lat * Math.PI) / 180) *
-        Math.sin(dLng / 2) *
-        Math.sin(dLng / 2);
+      Math.cos((loc2.lat * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
@@ -153,7 +153,7 @@ const BookRide: React.FC = () => {
     setDestinationSearch(temp?.address || '');
   };
 
-  const handleBookRide = () => {
+  const handleBookRide = async () => {
     if (!passenger || !pickup || !destination || !selectedVehicle) {
       toast.error('Missing Information', 'Please complete all required fields');
       return;
@@ -161,13 +161,13 @@ const BookRide: React.FC = () => {
 
     // Find driver with selected vehicle type (prefer online drivers, but use any for demo)
     const vehiclesWithType = vehiclesData.filter((v) => v.type === selectedVehicle && v.isActive);
-    const onlineDrivers = drivers.filter((d) => 
+    const onlineDrivers = drivers.filter((d) =>
       d.isOnline && vehiclesWithType.some((v) => v.driverId === d.id)
     );
-    
+
     // Use online drivers if available, otherwise use any driver with the vehicle type
-    const availableDrivers = onlineDrivers.length > 0 
-      ? onlineDrivers 
+    const availableDrivers = onlineDrivers.length > 0
+      ? onlineDrivers
       : drivers.filter((d) => vehiclesWithType.some((v) => v.driverId === d.id));
 
     // If still no drivers, use the first driver and create a vehicle for demo
@@ -176,7 +176,7 @@ const BookRide: React.FC = () => {
       : drivers[0]; // Fallback to first driver for demo
 
     let selectedVehicleData = vehiclesWithType.find((v) => v.driverId === selectedDriver.id);
-    
+
     // If no vehicle found, create a demo vehicle for this driver
     if (!selectedVehicleData) {
       selectedVehicleData = {
@@ -200,7 +200,7 @@ const BookRide: React.FC = () => {
 
     try {
       // Create ride using the store's createRide method
-      const newRide = createRide({
+      const newRide = await createRide({
         passengerId: passenger.id,
         driverId: selectedDriver.id,
         vehicleId: selectedVehicleData.id,
@@ -214,8 +214,12 @@ const BookRide: React.FC = () => {
         paymentMethod: 'card' as const,
       });
 
+      if (!newRide) {
+        throw new Error('Failed to create ride');
+      }
+
       // Update ride status to accepted
-      updateRide(newRide.id, { 
+      await updateRide(newRide.id, {
         status: 'accepted',
         requestTime: new Date().toISOString(),
       });
@@ -268,13 +272,12 @@ const BookRide: React.FC = () => {
               <React.Fragment key={label}>
                 <div className="flex flex-col items-center">
                   <div
-                    className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                      step === label.toLowerCase() ||
-                      (step === 'vehicle' && index === 0) ||
-                      (step === 'confirm' && index < 2)
+                    className={`h-10 w-10 rounded-full flex items-center justify-center ${step === label.toLowerCase() ||
+                        (step === 'vehicle' && index === 0) ||
+                        (step === 'confirm' && index < 2)
                         ? 'bg-gradient-to-r from-primary-600 to-purple-600 text-white'
                         : 'bg-gray-200 dark:bg-gray-700 text-gray-400'
-                    }`}
+                      }`}
                   >
                     {index + 1}
                   </div>
@@ -282,11 +285,10 @@ const BookRide: React.FC = () => {
                 </div>
                 {index < 2 && (
                   <div
-                    className={`h-1 w-16 rounded-full ${
-                      (step === 'vehicle' && index === 0) || (step === 'confirm' && index < 2)
+                    className={`h-1 w-16 rounded-full ${(step === 'vehicle' && index === 0) || (step === 'confirm' && index < 2)
                         ? 'bg-gradient-to-r from-primary-600 to-purple-600'
                         : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
+                      }`}
                   />
                 )}
               </React.Fragment>
@@ -464,11 +466,10 @@ const BookRide: React.FC = () => {
                   >
                     <Card
                       variant={selectedVehicle === vehicle.type ? 'gradient' : 'glass'}
-                      className={`cursor-pointer transition-all ${
-                        selectedVehicle === vehicle.type
+                      className={`cursor-pointer transition-all ${selectedVehicle === vehicle.type
                           ? 'ring-2 ring-primary-500'
                           : ''
-                      }`}
+                        }`}
                       onClick={() => setSelectedVehicle(vehicle.type)}
                     >
                       <div className="flex items-center justify-between">
@@ -544,7 +545,7 @@ const BookRide: React.FC = () => {
                 <h3 className="font-bold text-xl mb-4 text-gray-900 dark:text-white">
                   Trip Details
                 </h3>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
                     <MapPin className="h-5 w-5 text-green-500 mt-1" />
@@ -553,9 +554,9 @@ const BookRide: React.FC = () => {
                       <p className="text-sm text-gray-600 dark:text-gray-400">{pickup.address}</p>
                     </div>
                   </div>
-                  
+
                   <div className="ml-2.5 border-l-2 border-dashed border-gray-300 dark:border-gray-600 h-8" />
-                  
+
                   <div className="flex items-start gap-3">
                     <MapPin className="h-5 w-5 text-red-500 mt-1" />
                     <div>
